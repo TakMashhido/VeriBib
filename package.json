@@ -1,24 +1,32 @@
 {
   "name": "veribib",
-  "version": "1.0.0",
-  "description": "VeriBib — Free Academic Citation Checker & AI Hallucination Auditor. Verifies references against Crossref, OpenAlex, arXiv, PubMed, Google Books, and live web resources.",
+  "version": "2.0.0",
+  "description": "Free citation checker that detects AI-hallucinated references by verifying them against Crossref, OpenAlex, DataCite, arXiv, PubMed, Google Books and live web pages.",
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
-  "author": {
-    "name": "Koustav Kumar Mondal",
-    "url": "https://koustav.isroot.in",
-    "email": "erkoustavkumar@gmail.com"
-  },
-  "homepage": "https://koustav.isroot.in",
+  "keywords": [
+    "citation checker",
+    "bibliography",
+    "bibtex",
+    "hallucination",
+    "crossref",
+    "arxiv",
+    "doi",
+    "academic"
+  ],
+  "author": "Koustav Kumar Mondal (https://koustav.isroot.in)",
+  "homepage": "https://takmashhido.github.io/VeriBib/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TakMashhido/VeriBib.git"
   },
+  "bugs": "https://github.com/TakMashhido/VeriBib/issues",
   "license": "MIT"
 }
