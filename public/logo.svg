@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%" role="img" aria-label="VeriBib Logo">
+  <defs>
+    <!-- Base Drop Shadow -->
+    <filter id="logo-drop" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#1E3A8A" flood-opacity="0.22" />
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#0F172A" flood-opacity="0.12" />
+    </filter>
+
+    <filter id="check-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#059669" flood-opacity="0.3" />
+    </filter>
+
+    <!-- Blue Shield Gradient -->
+    <linearGradient id="shield-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="50%" stop-color="#2563EB" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+
+    <!-- Emerald Check Gradient -->
+    <linearGradient id="emerald-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+
+    <!-- Glass Overlay -->
+    <linearGradient id="glass-specular" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Rounded Shield -->
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#shield-grad)" filter="url(#logo-drop)" />
+  
+  <!-- Top Specular Bevel -->
+  <rect x="8" y="8" width="112" height="56" rx="28" fill="url(#glass-specular)" />
+
+  <!-- Inner Open Folio / Manuscript Card -->
+  <rect x="22" y="24" width="84" height="80" rx="14" fill="#FFFFFF" opacity="0.96" />
+  
+  <!-- Academic Document Ridge Lines -->
+  <rect x="34" y="38" width="46" height="5" rx="2.5" fill="#93C5FD" />
+  <rect x="34" y="49" width="60" height="4" rx="2" fill="#CBD5E1" />
+  <rect x="34" y="59" width="54" height="4" rx="2" fill="#CBD5E1" />
+  <rect x="34" y="69" width="40" height="4" rx="2" fill="#CBD5E1" />
+
+  <!-- Verified Checkmark Badge (Bottom Right Floating Pill) -->
+  <circle cx="88" cy="86" r="22" fill="#FFFFFF" filter="url(#logo-drop)" />
+  <circle cx="88" cy="86" r="18" fill="url(#emerald-grad)" filter="url(#check-glow)" />
+  <path d="M80 86 L85.5 91.5 L96.5 80.5" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+</svg>

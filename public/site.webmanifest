@@ -1,0 +1,17 @@
+{
+  "name": "VeriBib — Citation Checker & Academic Hallucination Auditor",
+  "short_name": "VeriBib",
+  "description": "Verify academic citations, detect AI hallucinations, and audit bibliographies against Crossref, OpenAlex, arXiv, PubMed, and live web resources.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#E5EFF9",
+  "theme_color": "#2563EB",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

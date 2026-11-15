@@ -1,0 +1,24 @@
+{
+  "name": "veribib",
+  "version": "1.0.0",
+  "description": "VeriBib — Free Academic Citation Checker & AI Hallucination Auditor. Verifies references against Crossref, OpenAlex, arXiv, PubMed, Google Books, and live web resources.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "author": {
+    "name": "Koustav Kumar Mondal",
+    "url": "https://koustav.isroot.in",
+    "email": "erkoustavkumar@gmail.com"
+  },
+  "homepage": "https://koustav.isroot.in",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TakMashhido/VeriBib.git"
+  },
+  "license": "MIT"
+}
