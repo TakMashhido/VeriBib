@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page not found · VeriBib</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/VeriBib/favicon.svg" type="image/svg+xml">
+  <style>
+    :root { --bg:#eef0fb; --surface:#f8f9ff; --ink:#1d2146; --muted:#5d648e; --p1:#6366f1; --p2:#8b5cf6;
+      --clay: 18px 22px 44px rgba(84,92,170,.17), -12px -12px 32px rgba(255,255,255,.9), inset 4px 4px 10px rgba(255,255,255,.95), inset -6px -6px 14px rgba(90,98,170,.1); }
+    @media (prefers-color-scheme: dark) { :root { --bg:#161a2e; --surface:#232846; --ink:#e9ebff; --muted:#a8aed6;
+      --clay: 16px 20px 40px rgba(0,0,0,.45), inset 3px 3px 8px rgba(255,255,255,.07), inset -5px -6px 14px rgba(0,0,0,.35); } }
+    body { margin:0; min-height:100vh; display:grid; place-items:center; padding:16px; box-sizing:border-box; background:var(--bg); color:var(--ink); font-family:"Nunito",ui-rounded,system-ui,sans-serif; }
+    main { max-width:440px; text-align:center; padding:40px 28px; border-radius:32px; background:var(--surface); box-shadow:var(--clay); }
+    h1 { font-size:64px; margin:0; font-weight:900; background:linear-gradient(135deg,var(--p1),var(--p2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    p { color:var(--muted); font-weight:700; }
+    a { display:inline-block; margin-top:12px; padding:14px 24px; border-radius:18px; color:#fff; font-weight:800; text-decoration:none; background:linear-gradient(135deg,var(--p1),var(--p2)); box-shadow:8px 12px 24px rgba(99,102,241,.35), inset 3px 3px 6px rgba(255,255,255,.4); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>404</h1>
+    <p>This page doesn’t exist. Unlike a hallucinated citation, we’ll admit it.</p>
+    <a id="home" href="/VeriBib/">Back to the citation checker</a>
+  </main>
+  <script>if (!location.pathname.startsWith("/VeriBib/")) document.getElementById("home").href = "/";</script>
+</body>
+</html>

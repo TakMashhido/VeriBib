@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /api/
 
-Sitemap: http://localhost:3847/sitemap.xml
+Sitemap: https://takmashhido.github.io/VeriBib/sitemap.xml
