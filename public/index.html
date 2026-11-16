@@ -250,16 +250,16 @@
             <circle class="ring-seg warn" cx="60" cy="60" r="50" id="ringWarn"/>
             <circle class="ring-seg bad" cx="60" cy="60" r="50" id="ringBad"/>
           </svg>
-          <div class="ring-label"><strong id="scoreNum">0%</strong><span>verified</span></div>
+          <div class="ring-label"><strong id="scoreNum">0%</strong><span>checked</span></div>
         </div>
         <div class="summary-main">
           <h2 id="results-title">Audit results</h2>
           <p class="muted" id="summaryMeta">—</p>
           <div class="stats" role="group" aria-label="Filter by status">
-            <button type="button" class="stat" data-filter="all" aria-pressed="true"><span class="stat-num" id="nAll">0</span><span>All</span></button>
-            <button type="button" class="stat ok" data-filter="verified" aria-pressed="false"><span class="stat-num" id="nOk">0</span><span>Verified</span></button>
-            <button type="button" class="stat warn" data-filter="needs_review" aria-pressed="false"><span class="stat-num" id="nWarn">0</span><span>Review</span></button>
-            <button type="button" class="stat bad" data-filter="not_found" aria-pressed="false"><span class="stat-num" id="nBad">0</span><span>Likely fake</span></button>
+            <button type="button" class="stat" data-filter="all" aria-pressed="true"><span class="stat-top"><span class="stat-num" id="nAll">0</span><span class="stat-pct" id="pAll">of 0</span></span><span>All</span></button>
+            <button type="button" class="stat ok" data-filter="verified" aria-pressed="false"><span class="stat-top"><span class="stat-num" id="nOk">0</span><span class="stat-pct" id="pOk">0%</span></span><span>Verified</span></button>
+            <button type="button" class="stat warn" data-filter="needs_review" aria-pressed="false"><span class="stat-top"><span class="stat-num" id="nWarn">0</span><span class="stat-pct" id="pWarn">0%</span></span><span>Review</span></button>
+            <button type="button" class="stat bad" data-filter="not_found" aria-pressed="false"><span class="stat-top"><span class="stat-num" id="nBad">0</span><span class="stat-pct" id="pBad">0%</span></span><span>Likely fake</span></button>
           </div>
         </div>
       </div>

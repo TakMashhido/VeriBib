@@ -611,6 +611,19 @@ function counts() {
   return c;
 }
 
+// Whole-number percentages of `of` that always add up to exactly 100 (largest-remainder rounding).
+function shares(counts, of) {
+  if (!of) return counts.map(() => 0);
+  const raw = counts.map((n) => (n / of) * 100);
+  const out = raw.map(Math.floor);
+  let left = Math.round(counts.reduce((a, n) => a + n, 0) / of * 100) - out.reduce((a, n) => a + n, 0);
+  raw
+    .map((v, i) => [v - Math.floor(v), i])
+    .sort((a, b) => b[0] - a[0])
+    .forEach(([, i]) => left-- > 0 && out[i]++);
+  return out;
+}
+
 const RING = 2 * Math.PI * 50;
 function updateSummary() {
   const c = counts();
@@ -620,6 +633,11 @@ function updateSummary() {
   $("#nOk").textContent = c.verified;
   $("#nWarn").textContent = c.needs_review;
   $("#nBad").textContent = c.not_found;
+  $("#pAll").textContent = `of ${total}`;
+  const [pOk, pWarn, pBad] = shares([c.verified, c.needs_review, c.not_found], done);
+  $("#pOk").textContent = `${pOk}%`;
+  $("#pWarn").textContent = `${pWarn}%`;
+  $("#pBad").textContent = `${pBad}%`;
 
   let offset = 0;
   for (const [id, n] of [["ringOk", c.verified], ["ringWarn", c.needs_review], ["ringBad", c.not_found]]) {
@@ -629,10 +647,11 @@ function updateSummary() {
     seg.style.strokeDashoffset = String(-offset);
     offset += len;
   }
-  // Share of the whole bibliography verified so far: starts at 0% and climbs as results arrive.
-  const pct = total ? Math.round((c.verified / total) * 100) : 0;
+  // Progress: share of the bibliography checked so far, reaching 100% when the audit is complete.
+  // The coloured arcs show the verified / review / fake split of that progress.
+  const pct = total ? Math.round((done / total) * 100) : 0;
   $("#scoreNum").textContent = `${pct}%`;
-  $("#scoreRing").setAttribute("aria-label", `${pct}% of ${total} references verified`);
+  $("#scoreRing").setAttribute("aria-label", `${pct}% checked: ${c.verified} verified, ${c.needs_review} need review, ${c.not_found} likely fake, out of ${total}`);
 
   const style = state.bibliography?.style;
   const styleName = style && style !== "unknown" ? (style === "bibtex" ? "BibTeX" : style === "ris" ? "RIS" : style.toUpperCase()) : "Mixed";

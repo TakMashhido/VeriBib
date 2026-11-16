@@ -306,6 +306,11 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
 .stat:hover { transform: translateY(-3px); }
 .stat[aria-pressed="true"] { box-shadow: var(--well-sm); background: var(--surface-2); transform: none; }
 .stat-num { font-size: 28px; font-weight: 900; line-height: 1.1; color: var(--ink); }
+.stat-top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.stat-pct { font-size: 13px; font-weight: 900; padding: 2px 8px; border-radius: 999px; color: var(--muted); background: var(--well-bg); box-shadow: var(--well-sm); font-variant-numeric: tabular-nums; }
+.stat.ok .stat-pct { color: var(--ok-ink); background: var(--ok-bg); box-shadow: none; }
+.stat.warn .stat-pct { color: var(--warn-ink); background: var(--warn-bg); box-shadow: none; }
+.stat.bad .stat-pct { color: var(--bad-ink); background: var(--bad-bg); box-shadow: none; }
 .stat.ok .stat-num { color: var(--ok); }
 .stat.warn .stat-num { color: var(--warn); }
 .stat.bad .stat-num { color: var(--bad); }
