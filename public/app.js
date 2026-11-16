@@ -629,9 +629,10 @@ function updateSummary() {
     seg.style.strokeDashoffset = String(-offset);
     offset += len;
   }
-  const pct = done ? Math.round((c.verified / done) * 100) : 0;
+  // Share of the whole bibliography verified so far: starts at 0% and climbs as results arrive.
+  const pct = total ? Math.round((c.verified / total) * 100) : 0;
   $("#scoreNum").textContent = `${pct}%`;
-  $("#scoreRing").setAttribute("aria-label", `${pct}% of checked references verified`);
+  $("#scoreRing").setAttribute("aria-label", `${pct}% of ${total} references verified`);
 
   const style = state.bibliography?.style;
   const styleName = style && style !== "unknown" ? (style === "bibtex" ? "BibTeX" : style === "ris" ? "RIS" : style.toUpperCase()) : "Mixed";
