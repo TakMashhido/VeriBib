@@ -106,3 +106,58 @@ test("title similarity is symmetric and resists padded fakes", () => {
   assert.ok(titleSimilarity("Quantum supremacy in recursive neural networks with non-abelian gauge fields", "Recursive neural networks - Six degree-of-freedom maneuvering simulation capabilities") < 0.55);
   assert.ok(titleSimilarity("ImageNet classification with deep convolutional neural networks", "Deep learning") < 0.3);
 });
+
+// --- text copied straight out of a PDF -------------------------------------
+
+test("PDF paste: heading, hard-wrapped lines, hyphenated words and wrapped DOIs", () => {
+  const text = `References
+Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, Ł.,
+& Polosukhin, I. (2017). Attention is all you need. Advances in Neural Information
+Processing Systems, 30, 5998–6008.
+He, K., Zhang, X., Ren, S., & Sun, J. (2016). Deep residual learning for image recog-
+nition. In Proceedings of the IEEE Conference on Computer Vision and Pattern Recog-
+nition (pp. 770–778). https://doi.org/10.1109/CVPR.2016.90
+LeCun, Y., Bengio, Y., & Hinton, G. (2015). Deep learning. Nature, 521(7553), 436–444.
+https://doi.org/10.1038/nature14539`;
+  const entries = splitReferences(text);
+  assert.equal(entries.length, 3, "heading must not become part of an entry and no entry may be swallowed");
+  const [a, b, c] = entries.map(extractFields);
+  assert.equal(a.title, "Attention is all you need");
+  assert.equal(a.surnames[0], "vaswani");
+  assert.equal(b.title, "Deep residual learning for image recognition");
+  assert.equal(b.doi, "10.1109/CVPR.2016.90");
+  assert.equal(b.venue, "Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition");
+  assert.equal(c.title, "Deep learning");
+  assert.equal(c.doi, "10.1038/nature14539");
+});
+
+test("PDF paste: page numbers are dropped, bare list numbers become markers", () => {
+  const entries = splitReferences(`1
+Vaswani A, Shazeer N, Parmar N. Attention is all you need. Adv Neural Inf Process Syst.
+2017;30:5998-6008.
+12
+2
+He K, Zhang X, Ren S, Sun J. Deep residual learning for image recognition. CVPR.
+2016:770-8.`);
+  assert.equal(entries.length, 2);
+  assert.equal(extractFields(entries[1]).year, 2016);
+});
+
+test("PDF paste: a DOI broken across two lines is rejoined", () => {
+  const entries = splitReferences("Smith, J. (2020). A study of things. Journal of Stuff, 4(2), 1-10. https://doi.org/10.1016/j.jstuff.\n2020.01.002");
+  assert.equal(entries.length, 1);
+  assert.equal(extractFields(entries[0]).doi, "10.1016/j.jstuff.2020.01.002");
+});
+
+test("PDF paste: ligature glyphs, soft hyphens and spacing accents are repaired", () => {
+  const [e] = splitReferences("Sch¨olkopf, B. (2001). Speciﬁc kernel meth­ods for eﬃcient learning. Journal of Learning, 3, 1-9.");
+  const f = extractFields(e);
+  assert.equal(f.title, "Specific kernel methods for efficient learning");
+  assert.deepEqual(f.surnames, ["scholkopf"]);
+});
+
+test("an Epub year next to the issue year is kept as an alternative year", () => {
+  const f = extractFields("Smith J, Lee K. A trial of things. Lancet. 2019 Jan;393(1):1-9. Epub 2018 Dec 5.");
+  assert.equal(f.year, 2019);
+  assert.deepEqual(f.altYears, [2018]);
+});

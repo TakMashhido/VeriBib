@@ -8,6 +8,7 @@ import { surnameKey } from "./fuzzy.js";
 const MARKER_RE = /^\s*(?:\[\d{1,3}\]|\(\d{1,3}\)|\d{1,3}[.)])\s+/;
 const BIB_START_RE = /(?<=^|[\s\]\)>])@\s*([a-zA-Z]+)\s*([{(])/g;
 const RIS_RE = /^TY\s{1,2}-/m;
+const LINK_TAIL_RE = /(?:doi\.org\/|doi:?\s*10\.|https?:\/\/)\S*$/i;
 const YEAR = "(?:1[5-9]\\d{2}|20\\d{2})";
 
 const NAME_START = "\\p{Lu}[\\p{L}'’\\-]+";
@@ -143,8 +144,63 @@ function splitRIS(text) {
   return out.map((b) => b.trim()).filter((b) => RIS_RE.test(b));
 }
 
+// ---------------------------------------------------------------------------
+// Pasted-from-PDF clean-up
+// ---------------------------------------------------------------------------
+
+const LIGATURES = { "ﬀ": "ff", "ﬁ": "fi", "ﬂ": "fl", "ﬃ": "ffi", "ﬄ": "ffl", "ﬅ": "st", "ﬆ": "st" };
+const SPACING_ACCENTS = { "¨": "\u0308", "ˆ": "\u0302", "˜": "\u0303", "¸": "\u0327", "ˇ": "\u030C", "˚": "\u030A", "˝": "\u030B", "˙": "\u0307", "˛": "\u0328", "´": "\u0301" };
+const HEADING_RE = /^(?:\d+\.?\s*)?(?:references?(?:\s+list)?|bibliography|works\s+cited|literature\s+cited|cited\s+literature|sources|citations?)\s*:?$/i;
+const PAGE_NO_RE = /^(?:page\s+)?\d{1,4}(?:\s*(?:of|\/)\s*\d{1,4})?$|^[-–—]\s*\d{1,4}\s*[-–—]$/i;
+
+// Character-level repairs for text copied out of a PDF: ligature glyphs, soft hyphens,
+// zero-width characters, and accents that were extracted as separate spacing marks.
+export function cleanPasted(text) {
+  return String(text || "")
+    .replace(/\u00AD[ \t]*\n[ \t]*/g, "") // soft hyphen at a line break: the word continues
+    .replace(/[\u00AD\u200B-\u200D\u2060\uFEFF]/g, "")
+    .replace(/[\uFB00-\uFB06]/g, (c) => LIGATURES[c] || "")
+    .replace(/[\u2010\u2011]/g, "-")
+    .replace(/[\f\v]/g, "\n")
+    .replace(/[\u00A0\u2000-\u200A\u202F\u205F\u3000]/g, " ")
+    .replace(/([¨ˆ˜¸ˇ˚˝˙˛]|´(?=[aeiouyAEIOUYcCnNzZ]))\s?(\p{L})/gu, (_, a, ch) => ch + SPACING_ACCENTS[a])
+    .normalize("NFC");
+}
+
+// Structural repairs: drop the "References" heading and stray page numbers, turn bare
+// "12" lines that really are list numbers into markers, and re-join words that the
+// PDF broke across a line ("recog-\nnition").
+function tidyPlain(text) {
+  const joined = text.replace(/(\p{Ll})-[ \t]*\n[ \t]*(?=\p{Ll})/gu, "$1");
+  const lines = joined.split("\n").map((l) => l.trim());
+  const out = [];
+  let expected = 1;
+  let pending = "";
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i];
+    if (HEADING_RE.test(l)) continue;
+    if (PAGE_NO_RE.test(l)) {
+      // A bare number is a list marker only if it is the next one in sequence and text follows.
+      const n = /^\d{1,3}$/.test(l) ? Number(l) : 0;
+      const nextText = lines.slice(i + 1).find(Boolean) || "";
+      if (n && n === expected && nextText && !PAGE_NO_RE.test(nextText)) {
+        pending = `[${n}] `;
+        expected++;
+      }
+      continue;
+    }
+    if (!l) {
+      out.push("");
+      continue;
+    }
+    out.push(pending + l);
+    pending = "";
+  }
+  return out.join("\n").trim();
+}
+
 function splitPlain(text) {
-  const clean = text.trim();
+  const clean = tidyPlain(text);
   if (!clean) return [];
   const lines = clean.split("\n").map((l) => l.trim()).filter(Boolean);
   if (!lines.length) return [];
@@ -187,12 +243,16 @@ function splitPlain(text) {
     if (isIdentifierOnly(cur)) startsNew = true;
     else if (isIdentifierOnly(t)) startsNew = hasIdentifier(cur);
     else {
-      const curDone = /[.!?)"”\]\d/]$/.test(cur) && !/doi\.org\/\S*$/i.test(cur);
+      // A trailing DOI/URL fragment may continue on the next line, unless that line starts a new reference.
+      const openLink = LINK_TAIL_RE.test(cur);
+      const curDone = (!openLink && /[.!?)"”\]\d/]$/.test(cur)) || (openLink && looksLikeEntryStart(t));
       startsNew = curDone && (looksLikeEntryStart(t) || (yearRe.test(cur) && yearRe.test(t) && /^[\p{Lu}"“]/u.test(t)));
     }
     if (startsNew) {
       entries.push(cur);
       cur = t;
+    } else if (LINK_TAIL_RE.test(cur) && !/\s/.test(t)) {
+      cur = `${cur}${t}`; // a link broken mid-token across two lines
     } else cur = `${cur} ${t}`;
   }
   if (cur) entries.push(cur);
@@ -214,7 +274,7 @@ function splitPlain(text) {
 }
 
 export function splitReferences(text) {
-  const clean = String(text || "").replace(/\r\n?/g, "\n").replace(/ /g, " ").trim();
+  const clean = cleanPasted(String(text || "").replace(/\r\n?/g, "\n")).trim();
   if (!clean) return [];
 
   if (RIS_RE.test(clean) && /^ER\s{1,2}-/m.test(clean)) {
@@ -656,6 +716,7 @@ function cleanVenue(s) {
     .replace(/,?\s*(?:pp?\.\s*)?\d+\s*[-–]+\s*\d+\.?$/, "")
     .replace(/,?\s*\d+\s*(?:\(\d+\))?\s*(?:[,:]\s*[\d\-–e]+)?\.?$/i, "")
     .replace(new RegExp(`,?\\s*${YEAR}\\.?$`), "")
+    .replace(/\s*\((?:pp?\.?|pages?)?\s*$/i, "")
     .replace(/^[\s,.;:]+|[\s,.;:]+$/g, "")
     .trim();
   return v.length >= 3 && v.length <= 200 && /\p{L}{3}/u.test(v) ? v : null;
@@ -685,6 +746,10 @@ export function extractFields(raw) {
 
   const body = stripIdentifiers(text, f.arxivId);
   f.year = extractYear(body);
+  // "Epub 2018" / "published online 2018": other years the same work legitimately carries.
+  const altRe = new RegExp(`(?:e-?pub|published|online|accepted|ahead of print)\\b[^.;()\\d]{0,25}?(?:\\d{1,2}\\s+[A-Z][a-z]{2,8}\\s+|[A-Z][a-z]{2,8}\\s+\\d{0,2},?\\s*)?\\b(${YEAR})\\b`, "gi");
+  const altYears = [...new Set([...text.matchAll(altRe)].map((m) => parseInt(m[1], 10)))].filter((y) => y !== f.year);
+  if (altYears.length) f.altYears = altYears;
 
   if (body.length >= 5) {
     const { authorsRaw, rest, mode } = splitAuthors(body);

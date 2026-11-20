@@ -219,6 +219,8 @@ function record(base) {
     title: cleanText(base.title || ""),
     authors,
     year: Number.isFinite(base.year) ? base.year : null,
+    // Every year the work legitimately carries (online-first, print issue, ...).
+    years: [...new Set([base.year, ...(base.years || [])].filter((y) => Number.isFinite(y) && y > 1000))].sort((a, b) => a - b),
     container: base.container ? cleanText(base.container) : null,
     volume: base.volume || null,
     issue: base.issue || null,
@@ -241,13 +243,21 @@ function withMailto(url) {
 // ---------------------------------------------------------------------------
 
 function mapCrossref(it) {
-  const dp = it.issued?.["date-parts"]?.[0]?.[0] ?? it["published-print"]?.["date-parts"]?.[0]?.[0] ?? it["published-online"]?.["date-parts"]?.[0]?.[0] ?? it.created?.["date-parts"]?.[0]?.[0];
+  const yearOf = (k) => {
+    const y = Number(it[k]?.["date-parts"]?.[0]?.[0]);
+    return Number.isFinite(y) && y > 0 ? y : null;
+  };
+  // `issued` is the earliest of the online and print dates, so a paper put online in
+  // December and printed in the next year's issue legitimately carries both years.
+  const years = ["issued", "published-print", "published-online", "published"].map(yearOf).filter(Boolean);
+  const dp = yearOf("issued") ?? yearOf("published-print") ?? yearOf("published-online") ?? yearOf("created");
   return record({
     source: "Crossref",
     doi: it.DOI,
     title: [it.title?.[0], it.subtitle?.[0]].filter(Boolean).join(": "),
     authors: (it.author || it.editor || []).map((a) => ({ given: a.given || "", family: a.family || a.name || "" })),
-    year: dp ? Number(dp) : null,
+    year: dp,
+    years,
     container: it["container-title"]?.[0] || it["event"]?.name || null,
     volume: it.volume,
     issue: it.issue,
@@ -257,7 +267,7 @@ function mapCrossref(it) {
   });
 }
 
-const CR_SELECT = "DOI,title,subtitle,author,editor,issued,published-print,published-online,container-title,volume,issue,page,publisher,type";
+const CR_SELECT = "DOI,title,subtitle,author,editor,issued,published,published-print,published-online,container-title,volume,issue,page,publisher,type";
 
 export async function crossrefByDoi(doi, opts) {
   const data = await request(withMailto(`https://api.crossref.org/works/${enc(doi)}`), opts);
@@ -379,6 +389,7 @@ function mapArxiv(entry) {
   const id = (entry.match(/<id>https?:\/\/arxiv\.org\/abs\/([^<]+)<\/id>/) || [])[1]?.replace(/v\d+$/, "") || null;
   if (!id) return null;
   const published = xmlTag(entry, "published") || "";
+  const updated = xmlTag(entry, "updated") || "";
   return record({
     source: "arXiv",
     arxivId: id,
@@ -386,6 +397,7 @@ function mapArxiv(entry) {
     title: xmlTag(entry, "title") || "",
     authors: [...entry.matchAll(/<name>([^<]+)<\/name>/g)].map((m) => splitName(cleanText(m[1]))),
     year: /^\d{4}/.test(published) ? parseInt(published.slice(0, 4), 10) : null,
+    years: /^\d{4}/.test(updated) ? [parseInt(updated.slice(0, 4), 10)] : [],
     container: xmlTag(entry, "arxiv:journal_ref") || "arXiv",
     type: "preprint",
     url: `https://arxiv.org/abs/${id}`,

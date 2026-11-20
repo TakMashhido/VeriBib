@@ -114,3 +114,27 @@ test("audit summarizes and flags duplicates", async () => {
   assert.deepEqual(seen.sort(), [1, 2]);
   assert.ok(out.results[1].verification.flags.some((f) => /Duplicate of reference #1/.test(f.text)));
 });
+
+test("a cited issue (print) year is not flagged when the record was first published online a year or two earlier", async () => {
+  const item = { ...cr("10.1000/journal.2018.001", "A study of reproducible things", ["Smith", "Lee"], 2018, "Journal of Stuff"), issued: { "date-parts": [[2018]] }, "published-online": { "date-parts": [[2018]] }, "published-print": { "date-parts": [[2020]] } };
+  routes.push(crSearch(item));
+  const v = await check("Smith, A., & Lee, A. (2020). A study of reproducible things. Journal of Stuff, 12(3), 45-60.");
+  assert.equal(v.status, "verified");
+  assert.ok(!v.flags.some((f) => f.code === "year"), "no year conflict");
+  assert.equal(v.checks.find((c) => c.id === "year").status, "pass");
+});
+
+test("a genuinely wrong year is still flagged", async () => {
+  const item = { ...cr("10.1000/journal.2018.001", "A study of reproducible things", ["Smith", "Lee"], 2018, "Journal of Stuff"), "published-print": { "date-parts": [[2019]] } };
+  routes.push(crSearch(item));
+  const v = await check("Smith, A., & Lee, A. (2024). A study of reproducible things. Journal of Stuff, 12(3), 45-60.");
+  assert.notEqual(v.status, "verified");
+  assert.ok(v.flags.some((f) => f.code === "year"));
+});
+
+test("an Epub year in the citation also counts against the record", async () => {
+  routes.push(crSearch(cr("10.1000/x", "A study of reproducible things", ["Smith", "Lee"], 2018, "Journal of Stuff")));
+  const v = await check("Smith A, Lee A. A study of reproducible things. J Stuff. 2020;12(3):45-60. Epub 2018 Dec 5.");
+  assert.equal(v.status, "verified");
+  assert.equal(v.checks.find((c) => c.id === "year").status, "pass");
+});

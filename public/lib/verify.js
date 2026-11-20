@@ -60,13 +60,18 @@ export function scoreCandidate(entry, rec, via = "search") {
     if (!rec.web.textHasAuthor) flags.push({ level: "medium", code: "authors", text: `Cited author “${E[0]}” is not named on the page.` });
   }
 
-  // Year
+  // Year. A work can legitimately carry several years (online-first vs. the printed issue),
+  // so the cited year is compared against every year on the record and the closest wins.
   let yearInfo = null;
   if (entry.year && rec.year) {
-    const diff = Math.abs(entry.year - rec.year);
+    const recYears = rec.years?.length ? rec.years : [rec.year];
+    const cited = [entry.year, ...(entry.altYears || [])];
+    let pair = { c: entry.year, r: rec.year, diff: Infinity };
+    for (const c of cited) for (const r of recYears) if (Math.abs(c - r) < pair.diff) pair = { c, r, diff: Math.abs(c - r) };
+    const { diff } = pair;
     parts.year = diff === 0 ? 1 : diff === 1 ? 0.85 : diff <= 3 ? 0.4 : 0;
-    yearInfo = { cited: entry.year, record: rec.year, diff };
-    if (diff >= 2) flags.push({ level: diff >= 4 ? "high" : "medium", code: "year", text: `Cited year ${entry.year}, but the record is from ${rec.year}.` });
+    yearInfo = { cited: pair.c, record: pair.r, diff, years: recYears };
+    if (diff >= 2) flags.push({ level: diff >= 4 ? "high" : "medium", code: "year", text: `Cited year ${entry.year}, but the record is from ${recYears.length > 1 ? recYears.join(" / ") : rec.year}.` });
   }
 
   // Venue (positive evidence only — abbreviations make mismatches unreliable)
@@ -350,7 +355,7 @@ function buildChecks(entry, c, { doi, page, idCand }) {
   }
   if (c.yearInfo) {
     const y = c.yearInfo;
-    checks.push({ id: "year", label: "Year", status: y.diff === 0 ? "pass" : y.diff === 1 ? "info" : "warn", detail: y.diff === 0 ? `${y.cited} matches` : `Cited ${y.cited}, record ${y.record}${y.diff === 1 ? " (preprint vs. published dates often differ)" : ""}` });
+    checks.push({ id: "year", label: "Year", status: y.diff === 0 ? "pass" : y.diff === 1 ? "info" : "warn", detail: y.diff === 0 ? (y.years.length > 1 ? `${y.cited} matches (record dates: ${y.years.join(" / ")})` : `${y.cited} matches`) : `Cited ${y.cited}, record ${y.years.length > 1 ? y.years.join(" / ") : y.record}${y.diff === 1 ? " (online vs. issue or preprint vs. published dates often differ)" : ""}` });
   }
   if (c.parts.venue != null) checks.push({ id: "venue", label: "Venue", status: "pass", detail: short(c.rec.container, 100) });
   return checks;
